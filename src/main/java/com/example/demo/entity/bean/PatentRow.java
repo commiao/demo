@@ -1,18 +1,18 @@
-package com.example.demo;
+package com.example.demo.entity.bean;
 
 import lombok.Builder;
 import lombok.Data;
 
 /**
- * 发明人数据
+ * 专利数据
  */
 @Data
 @Builder
-public class PersonRow {
+public class PatentRow {
     /**
      * 发明人
      **/
-    String name;
+    String names;
     /**
      * 申请年份 yyyy
      **/

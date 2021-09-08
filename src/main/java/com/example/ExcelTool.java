@@ -1,10 +1,13 @@
-package com.example.demo;
+package com.example;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
+import com.example.demo.entity.bean.CountDTO;
+import com.example.demo.entity.bean.PatentRow;
+import com.example.demo.entity.bean.PersonRow;
 import com.example.demo.entity.exportDTO.ExportCompanyData;
 import com.example.demo.entity.exportDTO.ExportPersonData;
 import com.example.demo.entity.importDTO.ImportCompanyData;

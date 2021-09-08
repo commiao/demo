@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.entity.bean;
 
 import lombok.Builder;
 import lombok.Data;
