@@ -41,4 +41,9 @@ public class ExcelPerson {
      **/
     @ExcelProperty("city_code_main")
     String cityCodeMain;
+    /**
+     * 城市编码
+     **/
+    @ExcelProperty("city")
+    String city;
 }
