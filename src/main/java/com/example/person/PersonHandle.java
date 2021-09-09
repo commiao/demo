@@ -29,6 +29,7 @@ public class PersonHandle {
     // 3、发明人去重-》同一年份，不同城市，发明类型不同
     // 4、发明人离开城市年份、进入城市年份
     // 5、汇总进入/离开同一城市的发明人集合，区分年份
+    // 6、根据城市 筛选出 从高质量到低质量/从低质量到高质量的数据集合
 
     private static Map<String, List<ExcelPerson>> buildPersonList(List<ExcelPerson> list) {
         Map<String, List<ExcelPerson>> personMap = list.parallelStream().collect(Collectors.groupingBy(ExcelPerson::getName));
