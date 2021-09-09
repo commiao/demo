@@ -2,15 +2,16 @@ package com.example.person;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
+import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.fastjson.JSONObject;
 import com.example.ExcelTool;
+import com.example.demo.entity.exportDTO.ExportCompanyData;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonListener;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PersonHandle {
@@ -62,12 +63,30 @@ public class PersonHandle {
         return isMoreCity;
     }
 
+    private static void write(String excelWritePath, List<ExcelPerson> list) {
+        ExcelWriter excelWriter = EasyExcel.write(excelWritePath).build();
+        WriteSheet writeSheet = EasyExcel.writerSheet(0, "inventor").head(ExcelPerson.class).build();
+        excelWriter.write(list, writeSheet);
+        excelWriter.finish();
+    }
+
     public static void main(String[] args) {
-        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonListener listen = build(excelFilePath);
         List<ExcelPerson> list = listen.getPersonList();
 
-        buildPersonList(list);
+        Map<String, List<ExcelPerson>> map = buildPersonList(list);
+
+        List<ExcelPerson> tList = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPerson>> entry : map.entrySet()) {
+            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear).thenComparing(ExcelPerson::getSymbol)).collect(Collectors.toList());
+            tList.addAll(l);
+        }
+        // excel输出地址
+        String excelWritePath = "F:\\excel\\210908\\inventor.xlsx";
+        write(excelWritePath, tList);
+
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")
 //                        && excelPerson.getYear().equals(2013)
