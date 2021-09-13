@@ -36,7 +36,7 @@ public class PersonHandle {
         Iterator<Map.Entry<String, List<ExcelPerson>>> it = personMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, List<ExcelPerson>> entry = it.next();
-            if (!checkCity(entry.getValue())) {
+            if (!checkCity(entry.getValue()) || checkSameName(entry.getValue())) {
                 it.remove();//使用迭代器的remove()方法删除元素
             }
         }
@@ -44,6 +44,32 @@ public class PersonHandle {
     }
 
     /**
+     * 去除重名
+     */
+    private static boolean checkSameName(List<ExcelPerson> list) {
+        // 把个人数据集合  按照年份分组
+        Map<Integer, List<ExcelPerson>> result = list.parallelStream().collect(Collectors.groupingBy(ExcelPerson::getYear));
+        // 同一年份 出现在两个以上的城市是潜在重名数据
+        for (Map.Entry<Integer, List<ExcelPerson>> entry : result.entrySet()) {
+            Map<String, List<ExcelPerson>> cityMap = entry.getValue().stream().collect(Collectors.groupingBy(ExcelPerson::getCityCodeMain));
+            if (cityMap.size() > 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isSamePatent(ExcelPerson data1, ExcelPerson data2) {
+        if (data1.getInventionSum() == data2.getInventionSum()
+                && data1.getUtilityModelSum() == data2.getUtilityModelSum()
+                && data1.getDesignSum() == data2.getDesignSum()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断是否迁移过
      * 校验发明人个人所在城市是否超过了1个
      * 超过2个说明该发明人是潜在的迁移数据
      * 此处不处理重名问题
@@ -72,8 +98,8 @@ public class PersonHandle {
     }
 
     public static void main(String[] args) {
-//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonListener listen = build(excelFilePath);
         List<ExcelPerson> list = listen.getPersonList();
 
