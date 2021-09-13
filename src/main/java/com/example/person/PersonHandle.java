@@ -5,9 +5,7 @@ import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
-import com.alibaba.fastjson.JSONObject;
 import com.example.ExcelTool;
-import com.example.demo.entity.exportDTO.ExportCompanyData;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonListener;
 
@@ -45,6 +43,8 @@ public class PersonHandle {
 
     /**
      * 去除重名
+     *
+     * @TODO
      */
     private static boolean checkSameName(List<ExcelPerson> list) {
         // 把个人数据集合  按照年份分组
@@ -59,10 +59,16 @@ public class PersonHandle {
         return false;
     }
 
+    /**
+     * @param data1
+     * @param data2
+     * @return
+     * @TODO
+     */
     private boolean isSamePatent(ExcelPerson data1, ExcelPerson data2) {
-        if (data1.getInventionSum() == data2.getInventionSum()
-                && data1.getUtilityModelSum() == data2.getUtilityModelSum()
-                && data1.getDesignSum() == data2.getDesignSum()) {
+        if (data1.getInventionSum().equals(data2.getInventionSum())
+                && data1.getUtilityModelSum().equals(data2.getUtilityModelSum())
+                && data1.getDesignSum().equals(data2.getDesignSum())) {
             return true;
         }
         return false;
@@ -90,29 +96,47 @@ public class PersonHandle {
         return isMoreCity;
     }
 
-    private static void write(String excelWritePath, List<ExcelPerson> list) {
+    private static <T> void write(String excelWritePath, List<T> list, Class<T> clazz) {
         ExcelWriter excelWriter = EasyExcel.write(excelWritePath).build();
-        WriteSheet writeSheet = EasyExcel.writerSheet(0, "inventor").head(ExcelPerson.class).build();
+        WriteSheet writeSheet = EasyExcel.writerSheet(0, "inventor").head(clazz).build();
         excelWriter.write(list, writeSheet);
         excelWriter.finish();
     }
 
     public static void main(String[] args) {
-        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonListener listen = build(excelFilePath);
         List<ExcelPerson> list = listen.getPersonList();
 
         Map<String, List<ExcelPerson>> map = buildPersonList(list);
 
+        // 去除无效数据
         List<ExcelPerson> tList = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPerson>> entry : map.entrySet()) {
-            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear).thenComparing(ExcelPerson::getSymbol)).collect(Collectors.toList());
+//            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear).thenComparing(ExcelPerson::getSymbol)).collect(Collectors.toList());
+
+            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getSymbol).thenComparing(ExcelPerson::getYear))
+                    .collect(Collectors.toList());
             tList.addAll(l);
         }
+
         // excel输出地址
-        String excelWritePath = "F:\\excel\\210908\\inventor.xlsx";
-        write(excelWritePath, tList);
+        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
+        write(excelWritePath, tList, ExcelPerson.class);
+
+        // 获取人员迁入迁出记录
+        Map<String, List<ExcelPerson>> personMap = tList.parallelStream()
+                .collect(Collectors.groupingBy(person -> {
+                    return person.getName() + person.getSymbol();
+                }));
+        List<Integer> yearList = new ArrayList<>();
+        // 名字+公司分组
+        for (Map.Entry<String, List<ExcelPerson>> entry : personMap.entrySet()) {
+            // 按年份排序，获取第一个年份
+            List<ExcelPerson> temp = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear)).collect(Collectors.toList());
+            Integer year = temp.get(0).getYear();
+        }
 
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")
