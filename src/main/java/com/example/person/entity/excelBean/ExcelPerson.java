@@ -3,6 +3,12 @@ package com.example.person.entity.excelBean;
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Data
 public class ExcelPerson {
     @ExcelProperty("year")
@@ -46,4 +52,17 @@ public class ExcelPerson {
      **/
     @ExcelProperty("city")
     String city;
+
+    public static void main(String[] args) {
+        List<String> l = new ArrayList<>();
+        l.add("2018_北京");
+        l.add("2018_南京");
+        l.add("2015_北京");
+        l.add("2016_天津");
+        l.add("2020_天津");
+        l.add("2012_郑州");
+
+        Collections.sort(l, (s1, s2) -> s1.compareTo(s2));
+        l.stream().forEach(System.out::println);
+    }
 }

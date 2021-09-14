@@ -6,8 +6,10 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.example.ExcelTool;
+import com.example.person.entity.dto.PersonCityChangeDTO;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonListener;
+import org.springframework.beans.BeanUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,7 +36,7 @@ public class PersonHandle {
         Iterator<Map.Entry<String, List<ExcelPerson>>> it = personMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, List<ExcelPerson>> entry = it.next();
-            if (!checkCity(entry.getValue()) || checkSameName(entry.getValue())) {
+            if (!checkMoreCity(entry.getValue()) || checkSameName(entry.getValue())) {
                 it.remove();//使用迭代器的remove()方法删除元素
             }
         }
@@ -80,7 +82,7 @@ public class PersonHandle {
      * 超过2个说明该发明人是潜在的迁移数据
      * 此处不处理重名问题
      */
-    private static boolean checkCity(List<ExcelPerson> list) {
+    private static boolean checkMoreCity(List<ExcelPerson> list) {
         String city = null;
         boolean isMoreCity = false;
         for (ExcelPerson person : list) {
@@ -96,6 +98,71 @@ public class PersonHandle {
         return isMoreCity;
     }
 
+    /**
+     * 按时间、公司排序，并标记迁入迁出
+     *
+     * @param tList
+     * @return
+     */
+    private static List<PersonCityChangeDTO> buildCityChangeList(List<ExcelPerson> tList) {
+        // 名字+公司分组
+        LinkedHashMap<String, List<ExcelPerson>> nameSymbolMap = new LinkedHashMap<>();
+        String key = null;
+        String currentKey = null;
+        for (ExcelPerson person : tList) {
+            currentKey = person.getName() + "_" + person.getSymbol();
+            if (currentKey.equals(key)) {
+                nameSymbolMap.get(key).add(person);
+            } else {
+                key = currentKey;
+                nameSymbolMap.put(key, new ArrayList<ExcelPerson>() {{
+                    add(person);
+                }});
+            }
+        }
+
+        String name = null;
+        String currentName = null;
+        List<PersonCityChangeDTO> cityChangeDTOList = new ArrayList<>();
+        List<String> yearSymbolList = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPerson>> entry : nameSymbolMap.entrySet()) {
+            // 按年份排序，获取第一个年份
+            List<ExcelPerson> temp = entry.getValue().parallelStream()
+                    .sorted(Comparator.comparing(ExcelPerson::getYear))
+                    .collect(Collectors.toList());
+            currentName = temp.get(0).getName();
+            String personSymbolKey = null;
+            if (!currentName.equals(name)) {
+                name = currentName;
+                Collections.sort(yearSymbolList, (s1, s2) -> s1.compareTo(s2));
+                // 个人一个公司，第一个年份标记为迁入  最后一个年份标记为迁出
+                for (String str : yearSymbolList) {
+                    String[] arr = str.split("_");
+                    personSymbolKey = arr[1] + "_" + arr[2];
+                    List<ExcelPerson> personSymbolList = nameSymbolMap.get(personSymbolKey);
+                    for (int i = 0; i < personSymbolList.size(); i++) {
+                        PersonCityChangeDTO dto = new PersonCityChangeDTO();
+                        BeanUtils.copyProperties(personSymbolList.get(i), dto);
+                        if (i == 0) {
+                            dto.setChangType("迁入");
+                        }
+                        if (i == personSymbolList.size() - 1) {
+                            if (personSymbolList.size() == 1) {
+                                dto.setChangType("迁入_迁出");
+                            } else {
+                                dto.setChangType("迁出");
+                            }
+                        }
+                        cityChangeDTOList.add(dto);
+                    }
+                }
+                yearSymbolList = new ArrayList<>();
+            }
+            yearSymbolList.add(buildPersonCityChangeStr(temp.get(0)));
+        }
+        return cityChangeDTOList;
+    }
+
     private static <T> void write(String excelWritePath, List<T> list, Class<T> clazz) {
         ExcelWriter excelWriter = EasyExcel.write(excelWritePath).build();
         WriteSheet writeSheet = EasyExcel.writerSheet(0, "inventor").head(clazz).build();
@@ -104,8 +171,8 @@ public class PersonHandle {
     }
 
     public static void main(String[] args) {
-//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonListener listen = build(excelFilePath);
         List<ExcelPerson> list = listen.getPersonList();
 
@@ -122,21 +189,14 @@ public class PersonHandle {
         }
 
         // excel输出地址
-        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
-        write(excelWritePath, tList, ExcelPerson.class);
+//        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
+//        write(excelWritePath, tList, ExcelPerson.class);
 
         // 获取人员迁入迁出记录
-        Map<String, List<ExcelPerson>> personMap = tList.parallelStream()
-                .collect(Collectors.groupingBy(person -> {
-                    return person.getName() + person.getSymbol();
-                }));
-        List<Integer> yearList = new ArrayList<>();
-        // 名字+公司分组
-        for (Map.Entry<String, List<ExcelPerson>> entry : personMap.entrySet()) {
-            // 按年份排序，获取第一个年份
-            List<ExcelPerson> temp = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear)).collect(Collectors.toList());
-            Integer year = temp.get(0).getYear();
-        }
+        List<PersonCityChangeDTO> cityChangeDTOList = buildCityChangeList(tList);
+        // excel输出地址
+        String excelWritePath = "F:\\excel\\210908\\inventor_city_change.xlsx";
+        write(excelWritePath, cityChangeDTOList, PersonCityChangeDTO.class);
 
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")
@@ -145,5 +205,15 @@ public class PersonHandle {
 //        ).forEach(
 //                excelPerson -> System.out.println(JSONObject.toJSON(excelPerson))
 //        );
+    }
+
+    private static String buildPersonCityChangeStr(ExcelPerson person) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(person.getYear()).append("_")
+                .append(person.getName()).append("_")
+                .append(person.getSymbol()).append("_")
+                .append(person.getCityCodeMain()).append("_")
+                .append(person.getCity());
+        return sb.toString();
     }
 }
