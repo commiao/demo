@@ -1,12 +1,12 @@
-package com.example.demo.listener;
+package com.example.patent.listener;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.fastjson.JSONObject;
-import com.example.demo.entity.bean.PatentRow;
-import com.example.demo.entity.bean.PersonRow;
+import com.example.patent.entity.bean.PatentRow;
+import com.example.patent.entity.bean.PersonRow;
 import com.example.Utils;
-import com.example.demo.entity.importDTO.ImportPatentData;
+import com.example.patent.entity.importDTO.ImportPatentData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -21,7 +21,7 @@ import java.util.List;
  * @author 井淼
  */
 @Slf4j
-public class PersonListener extends AnalysisEventListener<ImportPatentData> {
+public class PatentListener extends AnalysisEventListener<ImportPatentData> {
     // 发明专利数据集合
     private List<PatentRow> patentList = new ArrayList<>();
     // 发明人数据集合

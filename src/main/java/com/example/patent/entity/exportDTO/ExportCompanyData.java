@@ -1,4 +1,4 @@
-package com.example.demo.entity.exportDTO;
+package com.example.patent.entity.exportDTO;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Builder;

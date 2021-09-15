@@ -2,24 +2,22 @@ package com.example.person;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
-import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
-import com.alibaba.excel.write.metadata.WriteSheet;
 import com.example.ExcelTool;
-import com.example.person.entity.dto.PersonCityChangeDTO;
-import com.example.person.entity.excelBean.ExcelPerson;
-import com.example.person.listener.PersonListener;
+import com.example.person.entity.dto.CityChangeDTO;
+import com.example.person.entity.excelBean.ExcelPatent;
+import com.example.person.listener.PersonPatentListener;
 import org.springframework.beans.BeanUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PersonHandle {
+public class PersonPatentHandle {
 
-    private static PersonListener build(String excelFilePath) {
+    private static PersonPatentListener build(String excelFilePath) {
         ExcelReader excelReader = ExcelTool.getExcelReader(excelFilePath);
-        PersonListener listener = new PersonListener();
-        ReadSheet readSheetSys = EasyExcel.readSheet().head(ExcelPerson.class).registerReadListener(listener).build();
+        PersonPatentListener listener = new PersonPatentListener();
+        ReadSheet readSheetSys = EasyExcel.readSheet().head(ExcelPatent.class).registerReadListener(listener).build();
         excelReader.read(readSheetSys);
         return listener;
     }
@@ -31,11 +29,11 @@ public class PersonHandle {
     // 5、汇总进入/离开同一城市的发明人集合，区分年份
     // 6、根据城市 筛选出 从高质量到低质量/从低质量到高质量的数据集合
 
-    private static Map<String, List<ExcelPerson>> buildPersonList(List<ExcelPerson> list) {
-        Map<String, List<ExcelPerson>> personMap = list.parallelStream().collect(Collectors.groupingBy(ExcelPerson::getName));
-        Iterator<Map.Entry<String, List<ExcelPerson>>> it = personMap.entrySet().iterator();
+    private static Map<String, List<ExcelPatent>> buildPersonList(List<ExcelPatent> list) {
+        Map<String, List<ExcelPatent>> personMap = list.parallelStream().collect(Collectors.groupingBy(ExcelPatent::getName));
+        Iterator<Map.Entry<String, List<ExcelPatent>>> it = personMap.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<String, List<ExcelPerson>> entry = it.next();
+            Map.Entry<String, List<ExcelPatent>> entry = it.next();
             if (!checkMoreCity(entry.getValue()) || checkSameName(entry.getValue())) {
                 it.remove();//使用迭代器的remove()方法删除元素
             }
@@ -48,12 +46,12 @@ public class PersonHandle {
      *
      * @TODO
      */
-    private static boolean checkSameName(List<ExcelPerson> list) {
+    private static boolean checkSameName(List<ExcelPatent> list) {
         // 把个人数据集合  按照年份分组
-        Map<Integer, List<ExcelPerson>> result = list.parallelStream().collect(Collectors.groupingBy(ExcelPerson::getYear));
+        Map<Integer, List<ExcelPatent>> result = list.parallelStream().collect(Collectors.groupingBy(ExcelPatent::getYear));
         // 同一年份 出现在两个以上的城市是潜在重名数据
-        for (Map.Entry<Integer, List<ExcelPerson>> entry : result.entrySet()) {
-            Map<String, List<ExcelPerson>> cityMap = entry.getValue().stream().collect(Collectors.groupingBy(ExcelPerson::getCityCodeMain));
+        for (Map.Entry<Integer, List<ExcelPatent>> entry : result.entrySet()) {
+            Map<String, List<ExcelPatent>> cityMap = entry.getValue().stream().collect(Collectors.groupingBy(ExcelPatent::getCityCodeMain));
             if (cityMap.size() > 2) {
                 return true;
             }
@@ -67,7 +65,7 @@ public class PersonHandle {
      * @return
      * @TODO
      */
-    private boolean isSamePatent(ExcelPerson data1, ExcelPerson data2) {
+    private boolean isSamePatent(ExcelPatent data1, ExcelPatent data2) {
         if (data1.getInventionSum().equals(data2.getInventionSum())
                 && data1.getUtilityModelSum().equals(data2.getUtilityModelSum())
                 && data1.getDesignSum().equals(data2.getDesignSum())) {
@@ -82,10 +80,10 @@ public class PersonHandle {
      * 超过2个说明该发明人是潜在的迁移数据
      * 此处不处理重名问题
      */
-    private static boolean checkMoreCity(List<ExcelPerson> list) {
+    private static boolean checkMoreCity(List<ExcelPatent> list) {
         String city = null;
         boolean isMoreCity = false;
-        for (ExcelPerson person : list) {
+        for (ExcelPatent person : list) {
             if (city == null) {
                 city = person.getCityCodeMain();
                 continue;
@@ -104,18 +102,18 @@ public class PersonHandle {
      * @param tList
      * @return
      */
-    private static List<PersonCityChangeDTO> buildCityChangeList(List<ExcelPerson> tList) {
+    private static List<CityChangeDTO> buildCityChangeList(List<ExcelPatent> tList) {
         // 名字+公司分组
-        LinkedHashMap<String, List<ExcelPerson>> nameSymbolMap = new LinkedHashMap<>();
+        LinkedHashMap<String, List<ExcelPatent>> nameSymbolMap = new LinkedHashMap<>();
         String key = null;
         String currentKey = null;
-        for (ExcelPerson person : tList) {
+        for (ExcelPatent person : tList) {
             currentKey = person.getName() + "_" + person.getSymbol();
             if (currentKey.equals(key)) {
                 nameSymbolMap.get(key).add(person);
             } else {
                 key = currentKey;
-                nameSymbolMap.put(key, new ArrayList<ExcelPerson>() {{
+                nameSymbolMap.put(key, new ArrayList<ExcelPatent>() {{
                     add(person);
                 }});
             }
@@ -123,12 +121,12 @@ public class PersonHandle {
 
         String name = null;
         String currentName = null;
-        List<PersonCityChangeDTO> cityChangeDTOList = new ArrayList<>();
+        List<CityChangeDTO> cityChangeDTOList = new ArrayList<>();
         List<String> yearSymbolList = new ArrayList<>();
-        for (Map.Entry<String, List<ExcelPerson>> entry : nameSymbolMap.entrySet()) {
+        for (Map.Entry<String, List<ExcelPatent>> entry : nameSymbolMap.entrySet()) {
             // 按年份排序，获取第一个年份
-            List<ExcelPerson> temp = entry.getValue().parallelStream()
-                    .sorted(Comparator.comparing(ExcelPerson::getYear))
+            List<ExcelPatent> temp = entry.getValue().parallelStream()
+                    .sorted(Comparator.comparing(ExcelPatent::getYear))
                     .collect(Collectors.toList());
             currentName = temp.get(0).getName();
             String personSymbolKey = null;
@@ -139,9 +137,9 @@ public class PersonHandle {
                 for (String str : yearSymbolList) {
                     String[] arr = str.split("_");
                     personSymbolKey = arr[1] + "_" + arr[2];
-                    List<ExcelPerson> personSymbolList = nameSymbolMap.get(personSymbolKey);
+                    List<ExcelPatent> personSymbolList = nameSymbolMap.get(personSymbolKey);
                     for (int i = 0; i < personSymbolList.size(); i++) {
-                        PersonCityChangeDTO dto = new PersonCityChangeDTO();
+                        CityChangeDTO dto = new CityChangeDTO();
                         BeanUtils.copyProperties(personSymbolList.get(i), dto);
                         if (i == 0) {
                             dto.setChangType("迁入");
@@ -163,40 +161,35 @@ public class PersonHandle {
         return cityChangeDTOList;
     }
 
-    private static <T> void write(String excelWritePath, List<T> list, Class<T> clazz) {
-        ExcelWriter excelWriter = EasyExcel.write(excelWritePath).build();
-        WriteSheet writeSheet = EasyExcel.writerSheet(0, "inventor").head(clazz).build();
-        excelWriter.write(list, writeSheet);
-        excelWriter.finish();
-    }
+
 
     public static void main(String[] args) {
         String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
 //        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
-        PersonListener listen = build(excelFilePath);
-        List<ExcelPerson> list = listen.getPersonList();
+        PersonPatentListener listen = build(excelFilePath);
+        List<ExcelPatent> list = listen.getPersonList();
 
-        Map<String, List<ExcelPerson>> map = buildPersonList(list);
+        Map<String, List<ExcelPatent>> map = buildPersonList(list);
 
         // 去除无效数据
-        List<ExcelPerson> tList = new ArrayList<>();
-        for (Map.Entry<String, List<ExcelPerson>> entry : map.entrySet()) {
+        List<ExcelPatent> tList = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> entry : map.entrySet()) {
 //            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear).thenComparing(ExcelPerson::getSymbol)).collect(Collectors.toList());
 
-            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getSymbol).thenComparing(ExcelPerson::getYear))
+            List<ExcelPatent> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
                     .collect(Collectors.toList());
             tList.addAll(l);
         }
 
         // excel输出地址
 //        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
-//        write(excelWritePath, tList, ExcelPerson.class);
+//        ExcelTool.write(excelWritePath, tList, ExcelPerson.class);
 
         // 获取人员迁入迁出记录
-        List<PersonCityChangeDTO> cityChangeDTOList = buildCityChangeList(tList);
+        List<CityChangeDTO> cityChangeDTOList = buildCityChangeList(tList);
         // excel输出地址
         String excelWritePath = "F:\\excel\\210908\\inventor_city_change.xlsx";
-        write(excelWritePath, cityChangeDTOList, PersonCityChangeDTO.class);
+        ExcelTool.write(excelWritePath, cityChangeDTOList, CityChangeDTO.class);
 
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")
@@ -207,7 +200,7 @@ public class PersonHandle {
 //        );
     }
 
-    private static String buildPersonCityChangeStr(ExcelPerson person) {
+    private static String buildPersonCityChangeStr(ExcelPatent person) {
         StringBuffer sb = new StringBuffer();
         sb.append(person.getYear()).append("_")
                 .append(person.getName()).append("_")

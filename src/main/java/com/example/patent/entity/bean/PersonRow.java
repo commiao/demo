@@ -1,11 +1,14 @@
-package com.example.demo.entity.bean;
+package com.example.patent.entity.bean;
 
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * 发明人数据
+ */
 @Data
 @Builder
-public class PersonYearTotal {
+public class PersonRow {
     /**
      * 发明人
      **/
@@ -19,15 +22,15 @@ public class PersonYearTotal {
      **/
     String type;
     /**
-     * 刚上上市代码
+     * 申请号
+     **/
+    String applyNo;
+    /**
+     * 工商上市代码
      **/
     String companyNo;
     /**
      * 被引用次数
      **/
-    Integer useCountTotal;
-    /**
-     * 专利数量
-     **/
-    Integer countTotal;
+    Integer useCount;
 }
