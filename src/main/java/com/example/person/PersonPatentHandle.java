@@ -4,10 +4,11 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.example.ExcelTool;
-import com.example.person.entity.dto.CityChangeDTO;
 import com.example.person.entity.excelBean.ExcelPatent;
+import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonPatentListener;
-import org.springframework.beans.BeanUtils;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +40,64 @@ public class PersonPatentHandle {
             }
         }
         return personMap;
+    }
+
+    @Builder
+    @Getter
+    public class UserSymbolYearDTO {
+        String symbol;
+        Integer minYear;
+        Integer maxYear;
+    }
+
+    private void signUserCode(List<ExcelPatent> personList) {
+        Map<String, List<ExcelPatent>> symbolMap = personList.parallelStream().collect(Collectors.groupingBy(ExcelPatent::getSymbol));
+        List<UserSymbolYearDTO> l = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> entry : symbolMap.entrySet()) {
+            List<ExcelPatent> list = entry.getValue().stream().sorted(Comparator.comparing(ExcelPerson::getYear)).collect(Collectors.toList());
+            UserSymbolYearDTO dto = UserSymbolYearDTO.builder()
+                    .symbol(entry.getKey()).minYear(list.get(0).getYear()).maxYear(list.get(list.size() - 1).getYear())
+                    .build();
+            l.add(dto);
+        }
+        l = l.stream().sorted(Comparator.comparing(UserSymbolYearDTO::getMinYear)).collect(Collectors.toList());
+        for (int i = 0; i < l.size(); i++) {
+            UserSymbolYearDTO dto = l.get(i);
+            // 排除一个公司的数据
+            List<UserSymbolYearDTO> temp = l.stream().filter(entry -> !entry.getSymbol().equals(dto.getSymbol())).collect(Collectors.toList());
+            boolean isOne = false;
+            if (temp.size() > 0) {
+                UserSymbolYearDTO current = null;
+                for (UserSymbolYearDTO otherSymbol : temp) {
+                    // 最大年份 > 其他公司的最小年份/最大年份 > 最小年份  不是同一个人
+                    // 最大年份 = 其他公司最小年份  专利不同   不是同一人
+                    // 最大年份 = 其他公司最小年份  @TODO(专利相同)   是同一人
+                    if (dto.getMaxYear() == otherSymbol.getMinYear()) {
+                        current = otherSymbol;
+                        isOne = true;
+                    }
+                    // 最大年份 < 其他公司最小年份   是同一人
+                    if (dto.getMaxYear() < otherSymbol.getMinYear()) {
+                        current = otherSymbol;
+                        isOne = true;
+                    }
+                }
+                // 是同一人的时候
+                if (isOne) {
+                    String userCode = createUserCode();
+                    symbolMap.get(dto.getSymbol()).forEach(item -> item.setUserCode(userCode));
+                    symbolMap.get(current.getSymbol()).forEach(item -> item.setUserCode(userCode));
+                }
+            }
+        }
+
+    }
+
+    private static int number = 10000000;
+
+    private static String createUserCode() {
+        number++;
+        return "T" + number;
     }
 
     /**
@@ -96,100 +155,27 @@ public class PersonPatentHandle {
         return isMoreCity;
     }
 
-    /**
-     * 按时间、公司排序，并标记迁入迁出
-     *
-     * @param tList
-     * @return
-     */
-    private static List<CityChangeDTO> buildCityChangeList(List<ExcelPatent> tList) {
-        // 名字+公司分组
-        LinkedHashMap<String, List<ExcelPatent>> nameSymbolMap = new LinkedHashMap<>();
-        String key = null;
-        String currentKey = null;
-        for (ExcelPatent person : tList) {
-            currentKey = person.getName() + "_" + person.getSymbol();
-            if (currentKey.equals(key)) {
-                nameSymbolMap.get(key).add(person);
-            } else {
-                key = currentKey;
-                nameSymbolMap.put(key, new ArrayList<ExcelPatent>() {{
-                    add(person);
-                }});
-            }
-        }
-
-        String name = null;
-        String currentName = null;
-        List<CityChangeDTO> cityChangeDTOList = new ArrayList<>();
-        List<String> yearSymbolList = new ArrayList<>();
-        for (Map.Entry<String, List<ExcelPatent>> entry : nameSymbolMap.entrySet()) {
-            // 按年份排序，获取第一个年份
-            List<ExcelPatent> temp = entry.getValue().parallelStream()
-                    .sorted(Comparator.comparing(ExcelPatent::getYear))
-                    .collect(Collectors.toList());
-            currentName = temp.get(0).getName();
-            String personSymbolKey = null;
-            if (!currentName.equals(name)) {
-                name = currentName;
-                Collections.sort(yearSymbolList, (s1, s2) -> s1.compareTo(s2));
-                // 个人一个公司，第一个年份标记为迁入  最后一个年份标记为迁出
-                for (String str : yearSymbolList) {
-                    String[] arr = str.split("_");
-                    personSymbolKey = arr[1] + "_" + arr[2];
-                    List<ExcelPatent> personSymbolList = nameSymbolMap.get(personSymbolKey);
-                    for (int i = 0; i < personSymbolList.size(); i++) {
-                        CityChangeDTO dto = new CityChangeDTO();
-                        BeanUtils.copyProperties(personSymbolList.get(i), dto);
-                        if (i == 0) {
-                            dto.setChangType("迁入");
-                        }
-                        if (i == personSymbolList.size() - 1) {
-                            if (personSymbolList.size() == 1) {
-                                dto.setChangType("迁入_迁出");
-                            } else {
-                                dto.setChangType("迁出");
-                            }
-                        }
-                        cityChangeDTOList.add(dto);
-                    }
-                }
-                yearSymbolList = new ArrayList<>();
-            }
-            yearSymbolList.add(buildPersonCityChangeStr(temp.get(0)));
-        }
-        return cityChangeDTOList;
-    }
-
-
-
     public static void main(String[] args) {
         String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
 //        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonPatentListener listen = build(excelFilePath);
         List<ExcelPatent> list = listen.getPersonList();
 
-        Map<String, List<ExcelPatent>> map = buildPersonList(list);
-
         // 去除无效数据
+        Map<String, List<ExcelPatent>> map = buildPersonList(list);
         List<ExcelPatent> tList = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : map.entrySet()) {
 //            List<ExcelPerson> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPerson::getYear).thenComparing(ExcelPerson::getSymbol)).collect(Collectors.toList());
 
-            List<ExcelPatent> l = entry.getValue().parallelStream().sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
+            List<ExcelPatent> l = entry.getValue().parallelStream()
+                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
                     .collect(Collectors.toList());
             tList.addAll(l);
         }
 
         // excel输出地址
-//        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
-//        ExcelTool.write(excelWritePath, tList, ExcelPerson.class);
-
-        // 获取人员迁入迁出记录
-        List<CityChangeDTO> cityChangeDTOList = buildCityChangeList(tList);
-        // excel输出地址
-        String excelWritePath = "F:\\excel\\210908\\inventor_city_change.xlsx";
-        ExcelTool.write(excelWritePath, cityChangeDTOList, CityChangeDTO.class);
+        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
+        ExcelTool.write(excelWritePath, tList, ExcelPatent.class);
 
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")
