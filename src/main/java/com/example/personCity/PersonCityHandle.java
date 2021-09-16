@@ -87,7 +87,7 @@ public class PersonCityHandle {
 
 
     public static void main(String[] args) {
-        String excelFilePath = "F:\\excel\\210908\\city_change.xlsx";
+        String excelFilePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
         PersonListener listener = build(excelFilePath);
         List<ExcelCity> cityChangeList = findCityTypeList(listener.getPersonList());
 

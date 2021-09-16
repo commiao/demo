@@ -191,14 +191,14 @@ public class PersonPatentHandle {
         }
         int j = tList.size();
         System.out.println("######################已迁移数据" + (j - i) + "条");
-        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getTodoData().entrySet()) {
-            List<ExcelPatent> l = entry.getValue().parallelStream()
-                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
-                    .collect(Collectors.toList());
-            tList.addAll(l);
-        }
-        int h = tList.size();
-        System.out.println("######################有问题数据" + (h - j) + "条");
+//        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getTodoData().entrySet()) {
+//            List<ExcelPatent> l = entry.getValue().parallelStream()
+//                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
+//                    .collect(Collectors.toList());
+//            tList.addAll(l);
+//        }
+//        int h = tList.size();
+//        System.out.println("######################有问题数据" + (h - j) + "条");
         tList.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
         // excel输出地址
         String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
