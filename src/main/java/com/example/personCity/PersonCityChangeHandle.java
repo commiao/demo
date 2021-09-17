@@ -54,9 +54,6 @@ public class PersonCityChangeHandle {
         ExcelPerson current = null;
         for (int i = 0; i < userCityList.size(); i++) {
             ExcelPerson city = userCityList.get(i);
-            if ("Y10032952".equals(city.getUserCode())) {
-                System.out.println("=================");
-            }
             if (i == 0) {
                 current = city;
             } else if (!current.getCityCodeMain().equals(city.getCityCodeMain())) {
@@ -83,7 +80,7 @@ public class PersonCityChangeHandle {
         PersonListener listener = build(excelFilePath);
         List<CityChangeDTO> cityChangeList = findAllCityChangeList(listener.getPersonList());
 
-        String excelWritePath = "F:\\excel\\210908\\city_change.xlsx";
+        String excelWritePath = "F:\\excel\\210908\\person_city_change.xlsx";
         ExcelTool.write(excelWritePath, cityChangeList, CityChangeDTO.class);
 
     }

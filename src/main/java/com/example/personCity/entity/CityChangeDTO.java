@@ -1,30 +1,30 @@
 package com.example.personCity.entity;
 
 import com.alibaba.excel.annotation.ExcelProperty;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Builder
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CityChangeDTO {
     @ExcelProperty("year")
     private Integer year;
-    @ExcelProperty("userCode")
+    @ExcelProperty("user_code")
     private String userCode;
     @ExcelProperty("name")
     private String name;
-    @ExcelProperty("lastCityCode")
+    @ExcelProperty("last_city_code")
     private String lastCityCode;
     @ExcelProperty("lastCity")
     private String lastCity;
-    @ExcelProperty("lastSymbol")
+    @ExcelProperty("last_symbol")
     private String lastSymbol;
-    @ExcelProperty("nowCity")
+    @ExcelProperty("now_city")
     private String nowCity;
-    @ExcelProperty("nowCityCode")
+    @ExcelProperty("now_city_code")
     private String nowCityCode;
-    @ExcelProperty("nowSymbol")
+    @ExcelProperty("now_symbol")
     private String nowSymbol;
 }
