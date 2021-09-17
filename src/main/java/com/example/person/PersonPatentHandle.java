@@ -165,33 +165,41 @@ public class PersonPatentHandle {
     }
 
     public static void main(String[] args) {
-        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonPatentListener listen = build(excelFilePath);
         List<ExcelPatent> list = listen.getPersonList();
 
         // 去除无效数据
         CountPersonNameDTO dto = buildPersonList(list);
-        List<ExcelPatent> tList = new ArrayList<>();
+        List<ExcelPatent> no_List = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getNoMove().entrySet()) {
-            tList.addAll(entry.getValue());
+            no_List.addAll(entry.getValue());
         }
-        int i = tList.size();
+        int i = no_List.size();
         System.out.println("######################未迁移数据" + i + "条");
+        // excel输出地址
+        String excelWritePath_no = "F:\\excel\\210908\\no_move.xlsx";
+        no_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
+        ExcelTool.write(excelWritePath_no, 0, "no_move", no_List, ExcelPatent.class);
+        List<ExcelPatent> yes_List = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
-            tList.addAll(entry.getValue());
+            yes_List.addAll(entry.getValue());
         }
-        int j = tList.size();
-        System.out.println("######################已迁移数据" + (j - i) + "条");
+        int j = yes_List.size();
+        System.out.println("######################已迁移数据" + j + "条");
+        // excel输出地址
+        String excelWritePath_yes = "F:\\excel\\210908\\yes_move.xlsx";
+        yes_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
+        ExcelTool.write(excelWritePath_yes, 0, "yes_move", yes_List, ExcelPatent.class);
+//        List<ExcelPatent> tList = new ArrayList<>();
 //        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getTodoData().entrySet()) {
 //            tList.addAll(entry.getValue());
 //        }
 //        int h = tList.size();
 //        System.out.println("######################有问题数据" + (h - j) + "条");
-        tList.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
-        // excel输出地址
-        String excelWritePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
-        ExcelTool.write(excelWritePath, tList, ExcelPatent.class);
+//        tList.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
+//        ExcelTool.write(excelWritePath, tList, ExcelPatent.class);
 
 //        list.stream().filter(excelPerson ->
 //                excelPerson.getSymbol().equals("000012")

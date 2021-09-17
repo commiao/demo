@@ -47,7 +47,7 @@ public class ExcelTool {
         write(excelWritePath, null, null, list, clazz);
     }
 
-    private static <T> void write(String excelWritePath, Integer sheetNo, String sheetName, List<T> list, Class<T> clazz) {
+    public static <T> void write(String excelWritePath, Integer sheetNo, String sheetName, List<T> list, Class<T> clazz) {
         sheetNo = sheetNo == null ? 0 : sheetNo;
         sheetName = StringUtils.isBlank(sheetName) ? "sheet" : sheetName;
         ExcelWriter excelWriter = EasyExcel.write(excelWritePath).build();
