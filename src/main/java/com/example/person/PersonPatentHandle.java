@@ -8,10 +8,7 @@ import com.example.person.entity.dto.CountPersonNameDTO;
 import com.example.person.entity.excelBean.ExcelPatent;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonPatentListener;
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -104,23 +101,24 @@ public class PersonPatentHandle {
         l = l.stream().sorted(Comparator.comparing(UserSymbolYearDTO::getMinYear)).collect(Collectors.toList());
         boolean isOne = true;
         for (int i = 0; i < l.size(); i++) {
-            UserSymbolYearDTO dto = l.get(i);
+            UserSymbolYearDTO currDto = l.get(i);
             // 排除一个公司的数据
-            List<UserSymbolYearDTO> temp = l.stream().filter(entry -> !entry.getSymbol().equals(dto.getSymbol())).collect(Collectors.toList());
+            List<UserSymbolYearDTO> temp = l.stream().filter(entry -> !entry.getSymbol().equals(currDto.getSymbol())).collect(Collectors.toList());
             if (temp.size() > 0) {
                 for (UserSymbolYearDTO otherSymbol : temp) {
                     // 最大年份 > 其他公司的最小年份/最大年份 > 最小年份  不是同一个人
-                    if ((dto.getMaxYear() >= otherSymbol.getMinYear() && otherSymbol.getMinYear() >= dto.getMinYear())) {
+                    if ((currDto.getMaxYear() >= otherSymbol.getMinYear() && otherSymbol.getMinYear() >= currDto.getMinYear())) {
                         isOne = false;
                     }
-                    if (dto.getMaxYear() >= otherSymbol.getMaxYear() && otherSymbol.getMaxYear() >= dto.getMinYear()) {
+                    if (currDto.getMaxYear() >= otherSymbol.getMaxYear() && otherSymbol.getMaxYear() >= currDto.getMinYear()) {
                         isOne = false;
                     }
                     // 最大年份 = 其他公司最小年份  专利不同   不是同一人
                     // 最大年份 = 其他公司最小年份  @TODO(专利相同)   是同一人
                     // 最大年份 < 其他公司最小年份   是同一人
                 }
-                l.remove(dto);
+                l.remove(currDto);
+                i--;
             }
         }
         return isOne;
@@ -167,8 +165,8 @@ public class PersonPatentHandle {
     }
 
     public static void main(String[] args) {
-//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonPatentListener listen = build(excelFilePath);
         List<ExcelPatent> list = listen.getPersonList();
 
@@ -176,26 +174,17 @@ public class PersonPatentHandle {
         CountPersonNameDTO dto = buildPersonList(list);
         List<ExcelPatent> tList = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getNoMove().entrySet()) {
-            List<ExcelPatent> l = entry.getValue().parallelStream()
-                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
-                    .collect(Collectors.toList());
-            tList.addAll(l);
+            tList.addAll(entry.getValue());
         }
         int i = tList.size();
         System.out.println("######################未迁移数据" + i + "条");
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
-            List<ExcelPatent> l = entry.getValue().parallelStream()
-                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
-                    .collect(Collectors.toList());
-            tList.addAll(l);
+            tList.addAll(entry.getValue());
         }
         int j = tList.size();
         System.out.println("######################已迁移数据" + (j - i) + "条");
 //        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getTodoData().entrySet()) {
-//            List<ExcelPatent> l = entry.getValue().parallelStream()
-//                    .sorted(Comparator.comparing(ExcelPatent::getSymbol).thenComparing(ExcelPatent::getYear))
-//                    .collect(Collectors.toList());
-//            tList.addAll(l);
+//            tList.addAll(entry.getValue());
 //        }
 //        int h = tList.size();
 //        System.out.println("######################有问题数据" + (h - j) + "条");

@@ -10,10 +10,7 @@ import com.example.personCity.entity.ExcelCity;
 import com.example.personCity.listener.PersonListener;
 import org.springframework.beans.BeanUtils;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PersonCityHandle {
@@ -135,5 +132,10 @@ public class PersonCityHandle {
         dtoList = dtoList.parallelStream().sorted(Comparator.comparing(CityCountDTO::getCityCode).thenComparing(CityCountDTO::getYear)).collect(Collectors.toList());
         String excelWritePath = "F:\\excel\\210908\\city_count.xlsx";
         ExcelTool.write(excelWritePath, dtoList, CityCountDTO.class);
+
+        Map<String, Map<Integer, List<ExcelCity>>> map = new HashMap<>();
+
     }
+
+
 }
