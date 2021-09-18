@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class PersonCityChangeHandle {
+public class CityChangeHandle {
 
     private static PersonListener build(String excelFilePath) {
         ExcelReader excelReader = ExcelTool.getExcelReader(excelFilePath);

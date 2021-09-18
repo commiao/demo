@@ -165,8 +165,8 @@ public class PersonPatentHandle {
     }
 
     public static void main(String[] args) {
-//        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
+        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
         PersonPatentListener listen = build(excelFilePath);
         List<ExcelPatent> list = listen.getPersonList();
 
