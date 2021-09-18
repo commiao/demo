@@ -17,7 +17,7 @@ public class CityChangeDTO {
     private String name;
     @ExcelProperty("last_city_code")
     private String lastCityCode;
-    @ExcelProperty("lastCity")
+    @ExcelProperty("last_city")
     private String lastCity;
     @ExcelProperty("last_symbol")
     private String lastSymbol;
