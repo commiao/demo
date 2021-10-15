@@ -12,7 +12,10 @@ import com.example.personCity.entity.ExcelCity;
 import com.example.personCity.listener.PersonListener;
 import org.springframework.beans.BeanUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PersonCityHandle {
@@ -87,61 +90,30 @@ public class PersonCityHandle {
     }
 
     public static void main(String[] args) {
-        String excelFilePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
-        PersonListener listener = build(excelFilePath);
-        List<ExcelCity> cityChangeList = buildCityTypeList(listener.getPersonList());
-
-        String excelWritePath = "F:\\excel\\211015\\person_city_change_all.xlsx";
-        ExcelTool.write(excelWritePath, cityChangeList, ExcelCity.class);
+//        String excelFilePath = "F:\\excel\\210908\\inventor_symbol.xlsx";
+//        PersonListener listener = build(excelFilePath);
+//        List<ExcelCity> cityChangeList = buildCityTypeList(listener.getPersonList());
+//
+//        String excelWritePath = "F:\\excel\\211015\\person_city_change_all.xlsx";
+//        ExcelTool.write(excelWritePath, cityChangeList, ExcelCity.class);
 
         String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
         CountPersonNameDTO dto = PersonPatentHandle.getFilterMoveDTO(en_rd_person_excel_path);
-        Map<String, List<ExcelPatent>> patentList = dto.getYesMove();
+        List<ExcelPerson> yes_move_list = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
+            List<ExcelPerson> list = entry.getValue().stream().map(patent -> {
+                ExcelPerson person = new ExcelPerson();
+                BeanUtils.copyProperties(patent, person);
+                return person;
+            }).collect(Collectors.toList());
+            yes_move_list.addAll(list);
+        }
+        String person_city_change_yes_Path = "F:\\excel\\211015\\person_city_change_yes.xlsx";
+        ExcelTool.write(person_city_change_yes_Path, yes_move_list, ExcelPerson.class);
 
-//        // 按照城市、年份分组
-//        Map<Integer, Map<String, List<ExcelCity>>> cityYearMap = cityChangeList.parallelStream()
-//                .collect(Collectors.groupingBy(ExcelCity::getYear, Collectors.groupingBy(city -> {
-//                    return city.getCity() + "_" + city.getCityCodeMain();
-//                })));
-//        // 获取按年份统计 每个城市  迁入迁出的数据
-//        List<CityCountDTO> dtoList = new ArrayList<>();
-//        for (Map.Entry<Integer, Map<String, List<ExcelCity>>> yearEntry : cityYearMap.entrySet()) {
-//            Integer year = yearEntry.getKey();
-//            for (Map.Entry<String, List<ExcelCity>> cityEntry : yearEntry.getValue().entrySet()) {
-//                String key = cityEntry.getKey();
-//                String[] arr = key.split("_");
-//                Map<String, List<ExcelCity>> typeMap = cityEntry.getValue().parallelStream().collect(Collectors.groupingBy(ExcelCity::getChangeType));
-//                if (typeMap == null || typeMap.size() < 1) {
-//                    continue;
-//                }
-//                if (typeMap.get("迁入") != null) {
-//                    List<String> comeList = typeMap.get("迁入").parallelStream().map(ExcelPerson::getName).collect(Collectors.toList());
-//                    CityCountDTO come_dto = new CityCountDTO();
-////                    come_dto.setUserList(comeList);
-//                    come_dto.setYear(year);
-//                    come_dto.setCity(arr[0]);
-//                    come_dto.setCityCode(arr[1]);
-//                    come_dto.setType("迁入");
-//                    dtoList.add(come_dto);
-//                }
-//                if (typeMap.get("迁出") != null) {
-//                    List<String> goList = typeMap.get("迁出").parallelStream().map(ExcelPerson::getName).collect(Collectors.toList());
-//                    CityCountDTO go_dto = new CityCountDTO();
-////                    go_dto.setUserList(goList);
-//                    go_dto.setYear(year);
-//                    go_dto.setCity(arr[0]);
-//                    go_dto.setCityCode(arr[1]);
-//                    go_dto.setType("迁出");
-//                    dtoList.add(go_dto);
-//                }
-//            }
-//        }
-//        dtoList = dtoList.parallelStream().sorted(Comparator.comparing(CityCountDTO::getCityCode).thenComparing(CityCountDTO::getYear)).collect(Collectors.toList());
-//        String excelWritePath = "F:\\excel\\210908\\city_count.xlsx";
-//        ExcelTool.write(excelWritePath, dtoList, CityCountDTO.class);
+        List<ExcelCity> cityList = getUserCityChange(yes_move_list);
 
 
     }
-
 
 }

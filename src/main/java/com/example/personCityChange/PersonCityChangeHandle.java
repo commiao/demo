@@ -27,7 +27,7 @@ public class PersonCityChangeHandle {
 
     public static void main(String[] args) {
 //        String excelFilePath = "F:\\share with me\\public\\小井\\jing_处理好的数据\\210917\\city_change_pm.xlsx";
-        String excelFilePath = "F:\\excel\\210908\\city_change_pm.xlsx";
+        String excelFilePath = "F:\\excel\\210908\\ ";
         PersonCityChangeListener listener = build(excelFilePath);
         List<ExcelPersonCityChange> cityChangeList = listener.getPersonCityChangeList();
         System.out.println(cityChangeList.size());
