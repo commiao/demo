@@ -13,4 +13,6 @@ public class CityCountDTO {
     String cityCode;
     @ExcelProperty("type")
     String type;
+    @ExcelProperty
+    Integer total;
 }

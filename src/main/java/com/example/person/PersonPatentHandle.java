@@ -164,14 +164,18 @@ public class PersonPatentHandle {
         return false;
     }
 
-    public static void main(String[] args) {
-        String excelFilePath = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-//        String excelFilePath = "F:\\excel\\210908\\en_rd_person.xlsx";
-        PersonPatentListener listen = build(excelFilePath);
+    public static CountPersonNameDTO getFilterMoveDTO(String en_rd_person_excel_path) {
+        PersonPatentListener listen = build(en_rd_person_excel_path);
         List<ExcelPatent> list = listen.getPersonList();
-
         // 去除无效数据
-        CountPersonNameDTO dto = buildPersonList(list);
+        return buildPersonList(list);
+    }
+
+    public static void main(String[] args) {
+        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String en_rd_person_excel_path = "F:\\excel\\210908\\en_rd_person.xlsx";
+        CountPersonNameDTO dto = getFilterMoveDTO(en_rd_person_excel_path);
+
         List<ExcelPatent> no_List = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getNoMove().entrySet()) {
             no_List.addAll(entry.getValue());
@@ -192,21 +196,5 @@ public class PersonPatentHandle {
         String excelWritePath_yes = "F:\\excel\\210908\\yes_move.xlsx";
         yes_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
         ExcelTool.write(excelWritePath_yes, 0, "yes_move", yes_List, ExcelPatent.class);
-//        List<ExcelPatent> tList = new ArrayList<>();
-//        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getTodoData().entrySet()) {
-//            tList.addAll(entry.getValue());
-//        }
-//        int h = tList.size();
-//        System.out.println("######################有问题数据" + (h - j) + "条");
-//        tList.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
-//        ExcelTool.write(excelWritePath, tList, ExcelPatent.class);
-
-//        list.stream().filter(excelPerson ->
-//                excelPerson.getSymbol().equals("000012")
-//                        && excelPerson.getYear().equals(2013)
-//                        && excelPerson.getName().equals("李大平")
-//        ).forEach(
-//                excelPerson -> System.out.println(JSONObject.toJSON(excelPerson))
-//        );
     }
 }
