@@ -96,7 +96,7 @@ public class PersonCityHandle {
 
         String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
         CountPersonNameDTO dto = PersonPatentHandle.getFilterMoveDTO(en_rd_person_excel_path);
-        List<ExcelPatent> patentList = dto.get
+        Map<String, List<ExcelPatent>> patentList = dto.getYesMove();
 
 //        // 按照城市、年份分组
 //        Map<Integer, Map<String, List<ExcelCity>>> cityYearMap = cityChangeList.parallelStream()
