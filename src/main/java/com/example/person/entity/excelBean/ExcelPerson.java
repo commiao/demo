@@ -30,32 +30,6 @@ public class ExcelPerson {
      **/
     @ExcelProperty("city")
     String city;
-    /**
-     * 专利总数
-     */
-    @ExcelProperty("patent_sum")
-    String patentSum;
-    /**
-     * 发明总数
-     */
-    @ExcelProperty("invention_sum")
-    String inventionSum;
-    /**
-     * 实用新型
-     */
-    @ExcelProperty("utility_model_sum")
-    String utilityModelSum;
-    /**
-     * 设计模式
-     */
-    @ExcelProperty("design_sum")
-    String designSum;
-    /**
-     * 引用次数
-     */
-    @ExcelProperty("quote_sum")
-    String quoteSum;
-
 
     public static void main(String[] args) {
         List<String> l = new ArrayList<>();

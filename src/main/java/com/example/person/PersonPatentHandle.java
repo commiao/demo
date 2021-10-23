@@ -8,7 +8,10 @@ import com.example.person.entity.dto.CountPersonNameDTO;
 import com.example.person.entity.excelBean.ExcelPatent;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.person.listener.PersonPatentListener;
+import com.example.personCity.PersonCityHandle;
+import com.example.personCity.entity.ExcelCity;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -171,9 +174,82 @@ public class PersonPatentHandle {
         return buildPersonList(list);
     }
 
+    /**
+     * @param patentList 个人全部的发明专利数据集合
+     * @param cityList   个人的城市迁移集合
+     * @return
+     */
+    public static List<ExcelPatent> countPersonPatentByCity(List<ExcelPatent> patentList, List<ExcelCity> cityList) {
+        List<ExcelPatent> list = new ArrayList<>();
+        if (CollectionUtils.isEmpty(cityList)) {
+            list.add(countPersonPatent(patentList));
+            return list;
+        }
+        patentList.sort(Comparator.comparing(ExcelPatent::getYear));
+        cityList.sort(Comparator.comparing(ExcelCity::getYear));
+        ExcelPatent city_patent = null;
+        String currentCityCode = null;
+        Integer beginYear = null;
+        Integer endYear = null;
+        for (ExcelCity city : cityList) {
+            if (currentCityCode == null || "迁入".equals(city.getChangeType())) {
+                city_patent = new ExcelPatent();
+                city_patent.setUserCode(city.getUserCode());
+                city_patent.setName(city.getName());
+                city_patent.setCityCodeMain(city.getCityCodeMain());
+                city_patent.setCity(city.getCity());
+                beginYear = city.getYear();
+                continue;
+            }
+            if ("迁出".equals(city.getChangeType())) {
+                List<ExcelPatent> year_patent = new ArrayList<>();
+                endYear = city.getYear();
+                for (ExcelPatent patent : patentList) {
+                    if (patent.getYear() < beginYear) {
+                        continue;
+                    }
+                    if (patent.getYear() > endYear) {
+                        break;
+                    }
+                    year_patent.add(patent);
+                }
+                list.add(countPersonPatent(year_patent));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * 统计个人的发明专利汇总
+     *
+     * @param patentList
+     * @return
+     */
+    private static ExcelPatent countPersonPatent(List<ExcelPatent> patentList) {
+        ExcelPatent patent = new ExcelPatent();
+        for (ExcelPatent excelPatent : patentList) {
+            patent.setCity(excelPatent.getCity());
+            patent.setCityCodeMain(excelPatent.getCityCodeMain());
+            patent.setUserCode(excelPatent.getUserCode());
+            patent.setName(excelPatent.getName());
+            patent.setDesignSum(add(patent.getDesignSum(), excelPatent.getDesignSum()));
+            patent.setInventionSum(add(patent.getInventionSum(), excelPatent.getInventionSum()));
+            patent.setPatentSum(add(patent.getPatentSum(), excelPatent.getPatentSum()));
+            patent.setUtilityModelSum(add(patent.getUtilityModelSum(), excelPatent.getUtilityModelSum()));
+            patent.setQuoteSum(add(patent.getQuoteSum(), excelPatent.getQuoteSum()));
+        }
+        return patent;
+    }
+
+    private static int add(Integer last, Integer current) {
+        last = last == null ? 0 : last;
+        current = current == null ? 0 : current;
+        return last + current;
+    }
+
     public static void main(String[] args) {
-        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-//        String en_rd_person_excel_path = "F:\\excel\\210908\\en_rd_person.xlsx";
+//        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+        String en_rd_person_excel_path = "F:\\share with me\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
         CountPersonNameDTO dto = getFilterMoveDTO(en_rd_person_excel_path);
 
         List<ExcelPatent> no_List = new ArrayList<>();
@@ -183,9 +259,11 @@ public class PersonPatentHandle {
         int i = no_List.size();
         System.out.println("######################未迁移数据" + i + "条");
         // excel输出地址
-        String excelWritePath_no = "F:\\excel\\210908\\no_move.xlsx";
-        no_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
-        ExcelTool.write(excelWritePath_no, 0, "no_move", no_List, ExcelPatent.class);
+//        String excelWritePath_no = "F:\\excel\\211024\\no_move.xlsx";
+//        no_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
+//        ExcelTool.write(excelWritePath_no, 0, "no_move", no_List, ExcelPatent.class);
+
+
         List<ExcelPatent> yes_List = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
             yes_List.addAll(entry.getValue());
@@ -193,8 +271,41 @@ public class PersonPatentHandle {
         int j = yes_List.size();
         System.out.println("######################已迁移数据" + j + "条");
         // excel输出地址
-        String excelWritePath_yes = "F:\\excel\\210908\\yes_move.xlsx";
-        yes_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
-        ExcelTool.write(excelWritePath_yes, 0, "yes_move", yes_List, ExcelPatent.class);
+//        String excelWritePath_yes = "F:\\excel\\211024\\yes_move.xlsx";
+//        yes_List.parallelStream().sorted(Comparator.comparing(ExcelPatent::getName).thenComparing(ExcelPerson::getYear)).collect(Collectors.toList());
+//        ExcelTool.write(excelWritePath_yes, 0, "yes_move", yes_List, ExcelPatent.class);
+
+
+        // 汇总全部城市的数据
+        Map<String, List<ExcelPatent>> map_no = no_List.stream().collect(Collectors.groupingBy(ExcelPatent::getCityCodeMain));
+        List<ExcelPatent> count_list_no = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> city_entry : map_no.entrySet()) {
+            count_list_no.add(countPersonPatent(city_entry.getValue()));
+        }
+        // excel输出地址
+        String excelWritePath_countParentForCity_no = "F:\\excel\\211024\\count_patent_for_city_no.xlsx";
+        ExcelTool.write(excelWritePath_countParentForCity_no, count_list_no, ExcelPatent.class);
+
+
+        List<ExcelPerson> list = new ArrayList<>(yes_List);
+        List<ExcelCity> personCityList = PersonCityHandle.buildCityTypeList(list);
+        Map<String, List<ExcelPatent>> user_map = yes_List.stream().collect(Collectors.groupingBy(ExcelPerson::getUserCode));
+        Map<String, List<ExcelCity>> city_map = personCityList.stream().collect(Collectors.groupingBy(ExcelPerson::getCityCodeMain));
+        List<ExcelPatent> result = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> user : user_map.entrySet()) {
+            List<ExcelCity> cityList = city_map.get(user.getValue());
+            List<ExcelPatent> patentList = user.getValue();
+            result.addAll(countPersonPatentByCity(patentList, cityList));
+        }
+        // 汇总全部城市的数据
+        Map<String, List<ExcelPatent>> map_yes = result.stream().collect(Collectors.groupingBy(ExcelPatent::getCityCodeMain));
+        List<ExcelPatent> count_list_yes = new ArrayList<>();
+        for (Map.Entry<String, List<ExcelPatent>> city_entry : map_yes.entrySet()) {
+            count_list_yes.add(countPersonPatent(city_entry.getValue()));
+        }
+        // excel输出地址
+        String excelWritePath_countParentForCity_yes = "F:\\excel\\211024\\count_patent_for_city_yes.xlsx";
+        ExcelTool.write(excelWritePath_countParentForCity_yes, count_list_yes, ExcelPatent.class);
+
     }
 }

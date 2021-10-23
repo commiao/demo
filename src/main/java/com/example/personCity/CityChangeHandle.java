@@ -80,13 +80,19 @@ public class CityChangeHandle {
      * @return
      */
     private static CityCountDTO buildCityCountDTO(List<ExcelCity> cityList) {
+        Map<String, List<ExcelCity>> changeType_map = cityList.stream().collect(Collectors.groupingBy(ExcelCity::getChangeType));
         ExcelCity excelCity = cityList.get(0);
         CityCountDTO dto = new CityCountDTO();
         dto.setCity(excelCity.getCity());
         dto.setCityCode(excelCity.getCityCodeMain());
         dto.setYear(excelCity.getYear());
-        dto.setType(excelCity.getChangeType());
-        dto.setTotal(cityList.size());
+        int addTotal = changeType_map.get("迁入") == null ? 0 : changeType_map.get("迁入").size();
+        dto.setAddTotal(addTotal);
+        int decreaseTotal = changeType_map.get("迁出") == null ? 0 : changeType_map.get("迁出").size();
+        dto.setDecreaseTotal(decreaseTotal);
+        Integer total = dto.getAddTotal() - dto.getDecreaseTotal();
+        dto.setType(total < 0 ? "迁出" : "迁入");
+        dto.setTotal(total);
         return dto;
     }
 
@@ -125,16 +131,16 @@ public class CityChangeHandle {
             }
         }
         List<CityCountDTO> resultList = new ArrayList<>();
-        for (Map.Entry<String, Map<Integer, List<ExcelCity>>> entry : result.entrySet()) {
-            for (Map.Entry<Integer, List<ExcelCity>> map : entry.getValue().entrySet()) {
-                resultList.add(buildCityCountDTO(map.getValue()));
+        for (Map.Entry<String, Map<Integer, List<ExcelCity>>> city_map : result.entrySet()) {
+            for (Map.Entry<Integer, List<ExcelCity>> year_map : city_map.getValue().entrySet()) {
+                resultList.add(buildCityCountDTO(year_map.getValue()));
             }
         }
         return resultList.stream().sorted(Comparator.comparing(CityCountDTO::getCity).thenComparing(CityCountDTO::getYear)).collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
-        String excelFilePath = "F:\\excel\\210908\\yes_move.xlsx";
+        String excelFilePath = "F:\\excel\\211024\\yes_move.xlsx";
         PersonListener listener = build(excelFilePath);
 
 
@@ -144,11 +150,11 @@ public class CityChangeHandle {
 //        ExcelTool.write(excelWritePath, cityChangeList, CityChangeDTO.class);
 
         // 按城市维度统计
-        String excelWritePath_city = "F:\\excel\\211015\\person_move_count_for_city.xlsx";
+        String excelWritePath_city = "F:\\excel\\211024\\person_move_count_for_city.xlsx";
         List<CityCountDTO> cityCountDTOList = findAllChangeByCity(listener.getPersonList(), false);
         ExcelTool.write(excelWritePath_city, cityCountDTOList, CityCountDTO.class);
         // 按城市维度统计 过滤首年和末年
-        String excelWritePath_city_filter = "F:\\excel\\211015\\person_move_count_for_city_filter.xlsx";
+        String excelWritePath_city_filter = "F:\\excel\\211024\\person_move_count_for_city_filter.xlsx";
         List<CityCountDTO> cityCountDTOList_isfilter = findAllChangeByCity(listener.getPersonList(), true);
         ExcelTool.write(excelWritePath_city_filter, cityCountDTOList_isfilter, CityCountDTO.class);
     }
