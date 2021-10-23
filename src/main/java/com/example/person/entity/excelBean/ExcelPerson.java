@@ -31,6 +31,22 @@ public class ExcelPerson {
     @ExcelProperty("city")
     String city;
 
+    @ExcelProperty("patent_sum")
+    String patentSum;
+
+    @ExcelProperty("invention_sum")
+    String inventionSum;
+
+    @ExcelProperty("utility_model_sum")
+    String utilityModelSum;
+
+    @ExcelProperty("design_sum")
+    String designSum;
+
+    @ExcelProperty("quote_sum")
+    String quoteSum;
+
+
     public static void main(String[] args) {
         List<String> l = new ArrayList<>();
         l.add("2018_北京");
