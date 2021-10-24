@@ -5,14 +5,17 @@ import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.example.ExcelTool;
 import com.example.ExcelWriteBean;
+import com.example.person.PersonHandle;
+import com.example.person.entity.dto.CountPersonNameDTO;
+import com.example.person.entity.dto.UserSymbolYearDTO;
+import com.example.person.entity.excelBean.ExcelPatent;
+import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.personCityChange.entity.CityMoveCountDTO;
 import com.example.personCityChange.entity.ExcelPersonCityChange;
 import com.example.personCityChange.listener.PersonCityChangeListener;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +29,51 @@ public class PersonCityChangeHandle {
         ReadSheet readSheetSys = EasyExcel.readSheet().head(ExcelPersonCityChange.class).registerReadListener(listener).build();
         excelReader.read(readSheetSys);
         return listener;
+    }
+
+    // 1、发明人 年份  城市
+    // 2、发明人-》所在城市超过2个的
+    // 3、发明人去重-》同一年份，不同城市，发明类型不同
+    // 4、发明人离开城市年份、进入城市年份
+    // 5、汇总进入/离开同一城市的发明人集合，区分年份
+    // 6、根据城市 筛选出 从高质量到低质量/从低质量到高质量的数据集合
+    public static CountPersonNameDTO buildPersonList(List<ExcelPatent> list) {
+        Map<String, List<ExcelPatent>> personMap = list.parallelStream().collect(Collectors.groupingBy(ExcelPatent::getName));
+//        Iterator<Map.Entry<String, List<ExcelPatent>>> it = personMap.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry<String, List<ExcelPatent>> entry = it.next();
+//            if (!checkMoreCity(entry.getValue()) || checkSameName(entry.getValue())) {
+//                it.remove();//使用迭代器的remove()方法删除元素
+//            }
+//        }
+        System.out.println("========================共" + list.size() + "条数据，" + personMap.size() + "个人名");
+        Map<String, List<ExcelPatent>> noMove = new HashMap<>();
+        Map<String, List<ExcelPatent>> yesMove = new HashMap<>();
+        Map<String, List<ExcelPatent>> todoData = new HashMap<>();
+        PersonHandle personHandle = new PersonHandle();
+        for (Map.Entry<String, List<ExcelPatent>> entry : personMap.entrySet()) {
+            List<ExcelPatent> userList = entry.getValue().stream().sorted(Comparator.comparing(ExcelPerson::getYear)).collect(Collectors.toList());
+            Map<String, List<ExcelPatent>> symbolMap = userList.stream().collect(Collectors.groupingBy(ExcelPerson::getSymbol));
+            if (symbolMap.size() == 1) {
+                // 一个人名只在一个城市出现过
+                personHandle.setNoMoveUserCode(userList);
+                noMove.put(userList.get(0).getName(), userList);
+            } else {
+                // 一个人名出现在多个城市
+                List<UserSymbolYearDTO> checkList = PersonHandle.buildCheckList(symbolMap);
+                if (PersonHandle.checkIsSame(checkList)) {
+                    // 1、时间没有交集  迁移了
+                    personHandle.setYesMoveUserCode(userList);
+                    yesMove.put(userList.get(0).getName(), userList);
+                } else {
+                    // 2、时间有交集 @TODO 按重名剔除
+                    personHandle.setUserCode(userList, "******");
+                    todoData.put(userList.get(0).getName(), userList);
+                }
+            }
+        }
+        System.out.println("========================未迁移人数" + noMove.size() + "个人，已迁移人数" + yesMove.size() + "个人，有问题人数" + todoData.size() + "个人");
+        return CountPersonNameDTO.builder().noMoveMap(noMove).yesMoveMap(yesMove).todoDataMap(todoData).build();
     }
 
 

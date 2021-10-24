@@ -10,6 +10,7 @@ import com.example.person.entity.excelBean.ExcelPatent;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.personCity.entity.ExcelCity;
 import com.example.personCity.listener.PersonListener;
+import com.example.personCityChange.PersonCityChangeHandle;
 import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;
@@ -102,9 +103,11 @@ public class PersonCityHandle {
 
 //        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
         String en_rd_person_excel_path = "F:\\share with me\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
-        CountPersonNameDTO dto = PersonPatentHandle.getFilterMoveDTO(en_rd_person_excel_path);
+        List<ExcelPatent> allPersonPatentList = PersonPatentHandle.getAllPersonPatent(en_rd_person_excel_path);
+        // 去除无效数据
+        CountPersonNameDTO dto = PersonCityChangeHandle.buildPersonList(allPersonPatentList);
         List<ExcelPerson> yes_move_list = new ArrayList<>();
-        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
+        for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMoveMap().entrySet()) {
             List<ExcelPerson> list = entry.getValue().stream().map(patent -> {
                 ExcelPerson person = new ExcelPerson();
                 BeanUtils.copyProperties(patent, person);

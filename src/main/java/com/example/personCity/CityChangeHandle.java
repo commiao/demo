@@ -4,6 +4,10 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.example.ExcelTool;
+import com.example.person.PersonHandle;
+import com.example.person.entity.dto.CountPersonNameDTO;
+import com.example.person.entity.dto.UserSymbolYearDTO;
+import com.example.person.entity.excelBean.ExcelPatent;
 import com.example.person.entity.excelBean.ExcelPerson;
 import com.example.personCity.entity.CityChangeDTO;
 import com.example.personCity.entity.CityCountDTO;
@@ -149,18 +153,18 @@ public class CityChangeHandle {
 
 
         // 按人员维度统计
-//        List<CityChangeDTO> cityChangeList = findAllChangeByPerson(listener.getPersonList());
-//        String excelWritePath = "F:\\excel\\211015\\person_city_change.xlsx";
-//        ExcelTool.write(excelWritePath, cityChangeList, CityChangeDTO.class);
+        List<CityChangeDTO> cityChangeList = findAllChangeByPerson(listener.getPersonList());
+        String excelWritePath = "F:\\excel\\211024\\person_city_change.xlsx";
+        ExcelTool.write(excelWritePath, cityChangeList, CityChangeDTO.class);
 
         // 按城市维度统计
-        String excelWritePath_city = "F:\\excel\\211024\\person_move_count_for_city.xlsx";
-        List<CityCountDTO> cityCountDTOList = findAllChangeByCity(listener.getPersonList(), false);
-        ExcelTool.write(excelWritePath_city, cityCountDTOList, CityCountDTO.class);
-        // 按城市维度统计 过滤首年和末年
-        String excelWritePath_city_filter = "F:\\excel\\211024\\person_move_count_for_city_filter.xlsx";
-        List<CityCountDTO> cityCountDTOList_isfilter = findAllChangeByCity(listener.getPersonList(), true);
-        ExcelTool.write(excelWritePath_city_filter, cityCountDTOList_isfilter, CityCountDTO.class);
+//        String excelWritePath_city = "F:\\excel\\211024\\person_move_count_for_city.xlsx";
+//        List<CityCountDTO> cityCountDTOList = findAllChangeByCity(listener.getPersonList(), false);
+//        ExcelTool.write(excelWritePath_city, cityCountDTOList, CityCountDTO.class);
+//        // 按城市维度统计 过滤首年和末年
+//        String excelWritePath_city_filter = "F:\\excel\\211024\\person_move_count_for_city_filter.xlsx";
+//        List<CityCountDTO> cityCountDTOList_isfilter = findAllChangeByCity(listener.getPersonList(), true);
+//        ExcelTool.write(excelWritePath_city_filter, cityCountDTOList_isfilter, CityCountDTO.class);
     }
 
 
