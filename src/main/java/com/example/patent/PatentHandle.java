@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * 专利数据处理
+ */
 public class PatentHandle {
     private static ExportPersonData buildExportData(Map<String, List<PersonRow>> typeMap, Integer year, ImportCompanyData companyInfo) {
         if (year == null || companyInfo == null

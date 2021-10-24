@@ -13,6 +13,10 @@ import com.example.personCity.listener.PersonListener;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 以城市为视角
+ * 处理城市人员变迁的逻辑
+ */
 public class CityChangeHandle {
 
     private static PersonListener build(String excelFilePath) {

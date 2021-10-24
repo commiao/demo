@@ -16,6 +16,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 发明人与专利逻辑处理
+ */
 public class PersonPatentHandle {
 
     private static PersonPatentListener build(String excelFilePath) {

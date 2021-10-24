@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 处理发明人与城市之间的逻辑
+ */
 public class PersonCityHandle {
 
     private static PersonListener build(String excelFilePath) {
@@ -97,7 +100,8 @@ public class PersonCityHandle {
 //        String excelWritePath = "F:\\excel\\211015\\person_city_change_all.xlsx";
 //        ExcelTool.write(excelWritePath, cityChangeList, ExcelCity.class);
 
-        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+//        String en_rd_person_excel_path = "F:\\commiao_public\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
+        String en_rd_person_excel_path = "F:\\share with me\\public\\小井\\jing_处理好的数据\\210908\\en_rd_person.xlsx";
         CountPersonNameDTO dto = PersonPatentHandle.getFilterMoveDTO(en_rd_person_excel_path);
         List<ExcelPerson> yes_move_list = new ArrayList<>();
         for (Map.Entry<String, List<ExcelPatent>> entry : dto.getYesMove().entrySet()) {
@@ -108,10 +112,10 @@ public class PersonCityHandle {
             }).collect(Collectors.toList());
             yes_move_list.addAll(list);
         }
-        String person_city_change_yes_Path = "F:\\excel\\211015\\person_city_change_yes.xlsx";
-        ExcelTool.write(person_city_change_yes_Path, yes_move_list, ExcelPerson.class);
 
         List<ExcelCity> cityList = getUserCityChange(yes_move_list);
+        String person_city_change_yes_Path = "F:\\excel\\211024\\person_city_change_yes.xlsx";
+        ExcelTool.write(person_city_change_yes_Path, cityList, ExcelCity.class);
 
 
     }

@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 以发明人为视角
+ * 处理发明人城市迁移逻辑
+ */
 public class PersonCityChangeHandle {
     private static PersonCityChangeListener build(String excelFilePath) {
         ExcelReader excelReader = ExcelTool.getExcelReader(excelFilePath);
