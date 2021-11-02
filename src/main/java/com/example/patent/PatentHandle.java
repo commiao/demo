@@ -6,6 +6,7 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.example.ExcelTool;
+import com.example.FileTool;
 import com.example.patent.entity.bean.CountDTO;
 import com.example.patent.entity.bean.PatentRow;
 import com.example.patent.entity.bean.PersonRow;
@@ -273,7 +274,7 @@ public class PatentHandle {
 
         // 获取全部文件集合
         String excelPath_person_build = "F:\\excel\\person\\temp";
-        List<String> personFileList_build = ExcelTool.getFiles(excelPath_person_build);
+        List<String> personFileList_build = FileTool.getFiles(excelPath_person_build);
 
         List<PersonRow> personList = new ArrayList<>();
         List<PatentRow> patentList = new ArrayList<>();
